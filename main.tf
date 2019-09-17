@@ -227,7 +227,7 @@ module "app_loadbalancer" {
 }
 
 module "ansible" {
-  source = "github.com/ncolon/terraform-openshift-ansible.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-ansible.git?ref=v0.4"
   ssh_username            = "${var.ssh_username}"
   ssh_password            = "${var.ssh_password}"
   ssh_private_key         = "${tls_private_key.installkey.private_key_pem}"
@@ -272,7 +272,7 @@ module "ansible" {
 }
 
 module "rhnregister" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -314,7 +314,7 @@ module "rhnregister" {
 
 
 module "etchosts" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -349,7 +349,7 @@ module "etchosts" {
 }
 
 module "prepare_nodes" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -390,7 +390,7 @@ module "prepare_nodes" {
 }
 
 module "prepare_bastion" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -430,7 +430,7 @@ module "prepare_bastion" {
 }
 
 module "openshift_prereqs" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -469,7 +469,7 @@ module "openshift_prereqs" {
 }
 
 module "openshift_deploy" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -509,7 +509,7 @@ module "openshift_deploy" {
 }
 
 module "post_install" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.4"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -527,11 +527,18 @@ module "post_install" {
   storage_count      = "${var.storage["nodes"]}"
 
   dependson          = [
-    "module.openshift_deploy.module_completed",
+    "${module.ansible.module_completed}",
+    "${module.rhnregister.module_completed}",
+    "${module.etchosts.module_completed}",
+    "${module.prepare_nodes.module_completed}",
+    "${module.prepare_bastion.module_completed}",
+    "${module.openshift_prereqs.module_completed}",
+    "${module.openshift_deploy.module_completed}",
   ]
 
   triggerson         = {
     clusteradmin = "${var.openshift_admin_user}"
+    timestamp    = "${timestamp()}"
   }
 
   ansible_vars      = [

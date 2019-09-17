@@ -227,7 +227,7 @@ module "app_loadbalancer" {
 }
 
 module "ansible" {
-  source = "github.com/ncolon/terraform-openshift-ansible.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-ansible.git?ref=v0.2"
   ssh_username            = "${var.ssh_username}"
   ssh_password            = "${var.ssh_password}"
   ssh_private_key         = "${tls_private_key.installkey.private_key_pem}"
@@ -272,7 +272,7 @@ module "ansible" {
 }
 
 module "rhnregister" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -314,7 +314,7 @@ module "rhnregister" {
 
 
 module "etchosts" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -349,7 +349,7 @@ module "etchosts" {
 }
 
 module "prepare_nodes" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -390,7 +390,7 @@ module "prepare_nodes" {
 }
 
 module "prepare_bastion" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -430,7 +430,7 @@ module "prepare_bastion" {
 }
 
 module "openshift_prereqs" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -469,7 +469,7 @@ module "openshift_prereqs" {
 }
 
 module "openshift_deploy" {
-  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.1"
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
   ssh_username       = "${var.ssh_username}"
   ssh_password       = "${var.ssh_password}"
   ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
@@ -508,3 +508,37 @@ module "openshift_deploy" {
   ]
 }
 
+module "post_install" {
+  source = "github.com/ncolon/terraform-openshift-runplaybooks.git?ref=v0.2"
+  ssh_username       = "${var.ssh_username}"
+  ssh_password       = "${var.ssh_password}"
+  ssh_private_key    = "${tls_private_key.installkey.private_key_pem}"
+  bastion_ip_address = "${module.infrastructure.bastion_public_ip}"
+  bastion_private_ip = "${module.infrastructure.bastion_private_ip}"
+  master_private_ip  = "${module.infrastructure.master_private_ip}"
+  infra_private_ip   = "${module.infrastructure.infra_private_ip}"
+  worker_private_ip  = "${module.infrastructure.worker_private_ip}"
+  storage_private_ip = "${module.infrastructure.storage_private_ip}"
+  bastion_hostname   = "${module.infrastructure.bastion_hostname}"
+  master_hostname    = "${module.infrastructure.master_hostname}"
+  infra_hostname     = "${module.infrastructure.infra_hostname}"
+  storage_hostname   = "${module.infrastructure.storage_hostname}"
+  worker_hostname    = "${module.infrastructure.worker_hostname}"
+  storage_count      = "${var.storage["nodes"]}"
+
+  dependson          = [
+    "module.openshift_deploy.module_completed",
+  ]
+
+  triggerson         = {
+    clusteradmin = "${var.openshift_admin_user}"
+  }
+
+  ansible_vars      = [
+    "cluster_admin = ${var.openshift_admin_user}",
+  ]
+
+  ansible_playbooks = [
+    "${module.ansible.playbook}/post_install.yaml"
+  ]
+}

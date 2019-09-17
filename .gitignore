@@ -10,3 +10,5 @@
 
 # makefile
 makefile
+**/modules/*
+**/artifacts/*

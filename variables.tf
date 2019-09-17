@@ -268,3 +268,7 @@ variable "openshift_version" {
 variable "ansible_version" {
   default = "2.6"
 }
+
+variable "openshift_admin_user" {
+  default = "admin"
+}

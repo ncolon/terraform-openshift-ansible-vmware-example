@@ -10,5 +10,8 @@
 
 # makefile
 makefile
+
+# extra
 **/modules/*
 **/artifacts/*
+temp.json
